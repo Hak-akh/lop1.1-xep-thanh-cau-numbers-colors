@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nghe và Xếp từ thành câu: Tổng hợp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d81b60; /* Hồng đậm */
+            --primary-dark: #a00037;
+            --success-color: #2ecc71; /* Xanh ngọc */
+            --error-color: #e74c3c; /* Đỏ */
+            --light-bg: #fce4ec; /* Nền hồng rất nhạt */
+            --text-color: #34495e;
+            --disabled-color: #bdc3c7;
+            --white-color: #ffffff;
+            --yellow-color: #f1c40f;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(120deg, #fccb90 0%, #d57eeb 100%); /* Nền gradient hồng tím */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-color);
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            text-align: center;
+            padding: 25px;
+            max-width: 900px;
+            width: 95%;
+            background: var(--white-color);
+            border-radius: 24px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.1), 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        .game-title {
+            font-size: clamp(1.8em, 5vw, 2.5em);
+            color: var(--primary-color);
+            margin: 0 0 5px;
+            font-weight: 700;
+        }
+        .game-subtitle {
+            font-size: clamp(1.2em, 4vw, 1.5em);
+            margin-bottom: 20px;
+            color: #555;
+            font-weight: 600;
+        }
+        .meaning {
+            font-size: clamp(1.1em, 4.5vw, 1.6em);
+            color: var(--primary-dark);
+            margin: 15px 0;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .sentence {
+            font-size: clamp(1.2em, 4vw, 1.8em);
+            margin: 20px 0;
+            min-height: 80px;
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            letter-spacing: 2px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            line-height: 1.5;
+        }
+        .placeholder-word {
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+        .filled-word {
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+        .highlightable-word {
+            transition: background-color 0.2s ease, color 0.2s ease;
+            padding: 2px 4px;
+            border-radius: 5px;
+        }
+        .highlightable-word.highlighted {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px 0;
+        }
+        .word {
+            background: var(--white-color);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 700;
+            border-radius: 12px;
+            padding: 12px 22px;
+            cursor: pointer;
+            font-size: clamp(1em, 3.5vw, 1.4em);
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+        }
+        .word:hover, .word:focus {
+            background: var(--primary-color);
+            color: var(--white-color);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 6px 12px rgba(216, 27, 96, 0.3);
+            outline: none;
+        }
+        .word.disabled, .word.temp-disabled {
+            background: #ecf0f1;
+            border-color: var(--disabled-color);
+            color: #7f8c8d;
+            cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.8;
+            box-shadow: none;
+            transform: none;
+        }
+        .word.correct {
+            background: var(--success-color);
+            border-color: #27ae60;
+            color: var(--white-color);
+            transform: scale(1.05);
+        }
+        .word.incorrect {
+            background: var(--error-color);
+            border-color: #c0392b;
+            color: var(--white-color);
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        button {
+            background: var(--primary-color);
+            color: var(--white-color);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: clamp(0.9em, 3.5vw, 1.1em);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        button:hover, button:focus {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            outline: none;
+        }
+        button#resetBtn {
+            background-color: var(--yellow-color);
+            color: var(--text-color);
+        }
+        button#resetBtn:hover {
+            background-color: #f39c12;
+        }
+        button:disabled {
+            background: var(--disabled-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .score {
+            font-size: clamp(1.1em, 4vw, 1.4em);
+            margin-top: 20px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .message {
+            font-size: clamp(1.1em, 4vw, 1.4em);
+            margin: 15px 0;
+            font-weight: 700;
+            min-height: 25px;
+            transition: color 0.3s ease;
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .congrats-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+        }
+
+        .congrats-message {
+            color: var(--white-color);
+            font-size: clamp(1.8em, 5vw, 3em);
+            font-weight: 700;
+            line-height: 1.4;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+            padding: 0 20px;
+        }
+
+        #startBtn, #playAgainBtn {
+            padding: 18px 45px;
+            font-size: 1.3em;
+            background: var(--success-color);
+            border-radius: 16px;
+            border: 2px solid var(--white-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        #startBtn:hover, #playAgainBtn:hover {
+            background: #27ae60;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            .word-bank { gap: 10px; }
+            .word { padding: 10px 18px; }
+            button { padding: 10px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="gameContainer">
+        <div class="game-title">NGHE VÀ XẾP TỪ THÀNH CÂU</div>
+        <div class="game-subtitle">(Chủ đề: Tổng hợp)</div>
+
+        <div class="start-screen" id="startScreen">
+            <button id="startBtn">Bắt đầu</button>
+        </div>
+
+        <div class="game-screen" id="gameScreen" style="display: none;">
+            <div class="meaning" id="meaning"></div>
+            <div class="sentence" id="sentence"></div>
+            <div class="message" id="message"></div>
+            <div class="word-bank" id="wordBank"></div>
+            <div class="buttons">
+                <button id="listenAgainBtn">Nghe lại cả câu</button>
+                <button id="resetBtn">Chơi lại từ đầu</button>
+            </div>
+            <div class="score" id="score"></div>
+        </div>
+    </div>
+    
+    <canvas id="fireworks"></canvas>
+    
+    <div class="congrats-screen" id="congratsScreen">
+        <div class="congrats-message" id="congratsMessage"></div>
+        <button id="playAgainBtn">Chơi lại</button>
+    </div>
+
+
+    <script>
+    // --- DATA ---
+    const sentences = [
+        { en: "I have one pen.", vi: "Tôi có một cây bút.", emoji: "🖊️" },
+        { en: "I have two books.", vi: "Tôi có hai cuốn sách.", emoji: "📚" },
+        { en: "I have three cats.", vi: "Tôi có ba con mèo.", emoji: "🐱" },
+        { en: "I have four pencils.", vi: "Tôi có bốn cây bút chì.", emoji: "✏️" },
+        { en: "I have five crayons.", vi: "Tôi có năm cây bút màu.", emoji: "🖍️" },
+        { en: "I have six bags.", vi: "Tôi có sáu cái túi.", emoji: "👜" },
+        { en: "I have seven toys.", vi: "Tôi có bảy món đồ chơi.", emoji: "🧸" },
+        { en: "I have eight rulers.", vi: "Tôi có tám cây thước.", emoji: "📏" },
+        { en: "I have nine books.", vi: "Tôi có chín cuốn sách.", emoji: "📚" },
+        { en: "I have ten pens.", vi: "Tôi có mười cây bút.", emoji: "🖊️" },
+        { en: "I like red.", vi: "Tôi thích màu đỏ.", emoji: "❤️" },
+        { en: "I like blue.", vi: "Tôi thích màu xanh lam.", emoji: "💙" },
+        { en: "I like yellow.", vi: "Tôi thích màu vàng.", emoji: "💛" },
+        { en: "I like green.", vi: "Tôi thích màu xanh lá.", emoji: "💚" },
+        { en: "I like black.", vi: "Tôi thích màu đen.", emoji: "🖤" },
+        { en: "I like white.", vi: "Tôi thích màu trắng.", emoji: "🤍" },
+        { en: "I like pink.", vi: "Tôi thích màu hồng.", emoji: "💗" },
+        { en: "I like brown.", vi: "Tôi thích màu nâu.", emoji: "🤎" },
+        { en: "I like orange.", vi: "Tôi thích màu cam.", emoji: "🧡" },
+        { en: "I like purple.", vi: "Tôi thích màu tím.", emoji: "💜" },
+        { en: "I like grey.", vi: "Tôi thích màu xám.", emoji: "🩶" },
+        { en: "I like light blue.", vi: "Tôi thích màu xanh nhạt.", emoji: "🩵" },
+        { en: "I like dark green.", vi: "Tôi thích màu xanh đậm.", emoji: "🌲" },
+        { en: "I like dogs.", vi: "Tôi thích chó.", emoji: "🐶" },
+        { en: "I like cats.", vi: "Tôi thích mèo.", emoji: "🐱" },
+        { en: "I like birds.", vi: "Tôi thích chim.", emoji: "🐦" },
+        { en: "I like fish.", vi: "Tôi thích cá.", emoji: "🐠" },
+        { en: "I like ducks.", vi: "Tôi thích vịt.", emoji: "🦢" },
+        { en: "I like chickens.", vi: "Tôi thích gà.", emoji: "🐔" },
+        { en: "I like cows.", vi: "Tôi thích bò.", emoji: "🐄" },
+        { en: "I like pigs.", vi: "Tôi thích lợn.", emoji: "🐷" },
+        { en: "I like horses.", vi: "Tôi thích ngựa.", emoji: "🐎" },
+        { en: "I like sheep.", vi: "Tôi thích cừu.", emoji: "🐑" },
+        { en: "I like lions.", vi: "Tôi thích sư tử.", emoji: "🦁" },
+        { en: "I like tigers.", vi: "Tôi thích hổ.", emoji: "🐅" },
+        { en: "I like elephants.", vi: "Tôi thích voi.", emoji: "🐘" },
+        { en: "I like monkeys.", vi: "Tôi thích khỉ.", emoji: "🐒" },
+        { en: "I like bears.", vi: "Tôi thích gấu.", emoji: "🐻" },
+        { en: "I have a book.", vi: "Tôi có một cuốn sách.", emoji: "📖" },
+        { en: "I have a pen.", vi: "Tôi có một cây bút.", emoji: "🖋️" },
+        { en: "I have a pencil.", vi: "Tôi có một cây bút chì.", emoji: "✏️" },
+        { en: "I have an eraser.", vi: "Tôi có một cục tẩy.", emoji: "🧽" },
+        { en: "I have a ruler.", vi: "Tôi có một cây thước.", emoji: "📏" },
+        { en: "I have a bag.", vi: "Tôi có một cái túi.", emoji: "👜" },
+        { en: "I have a notebook.", vi: "Tôi có một cuốn sổ tay.", emoji: "📓" },
+        { en: "I have a sharpener.", vi: "Tôi có một cái gọt bút chì.", emoji: "✂️" },
+        { en: "I have a board.", vi: "Tôi có một cái bảng.", emoji: "🖼️" },
+        { en: "I have chalk.", vi: "Tôi có phấn viết bảng.", emoji: "🧑‍🏫" },
+        { en: "I have a desk.", vi: "Tôi có một cái bàn.", emoji: "🪑" },
+        { en: "I have a chair.", vi: "Tôi có một cái ghế.", emoji: "🪑" },
+        { en: "I have a crayon.", vi: "Tôi có một cây bút màu.", emoji: "🖍️" },
+        { en: "I have glue.", vi: "Tôi có keo dán.", emoji: "🧴" },
+        { en: "I have scissors.", vi: "Tôi có một cái kéo.", emoji: "✂️" },
+        { en: "I have English lessons.", vi: "Tôi có các buổi học tiếng Anh.", emoji: "📚" },
+        { en: "I love English.", vi: "Tôi yêu tiếng Anh.", emoji: "❤️" }
+    ];
+
+    // --- DOM Elements ---
+    const elements = {
+        gameContainer: document.getElementById('gameContainer'),
+        startScreen: document.getElementById('startScreen'),
+        gameScreen: document.getElementById('gameScreen'),
+        congratsScreen: document.getElementById('congratsScreen'),
+        meaning: document.getElementById('meaning'),
+        sentence: document.getElementById('sentence'),
+        message: document.getElementById('message'),
+        wordBank: document.getElementById('wordBank'),
+        listenAgainBtn: document.getElementById('listenAgainBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        startBtn: document.getElementById('startBtn'),
+        playAgainBtn: document.getElementById('playAgainBtn'),
+        score: document.getElementById('score'),
+        canvas: document.getElementById('fireworks'),
+        congratsMessage: document.getElementById('congratsMessage')
+    };
+
+    // --- State Management ---
+    let state = {};
+    const isSpeechSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+    function initializeState() {
+        state = {
+            originalSentence: '',
+            words: [],
+            currentWordIndex: 0,
+            score: 0,
+            completedSentences: 0,
+            sentencesWithPoints: 0,
+            currentSentenceIndex: 0,
+            isSpeaking: false,
+            isTransitioning: false,
+            animationFrameId: null,
+            completionTimeoutId: null,
+            audioIntervalId: null,
+            mistakeCount: 0
+        };
+    }
+
+    // --- Core Game Logic ---
+    function startGame() {
+        initializeState();
+        updateScoreDisplay();
+        elements.gameContainer.style.display = 'block';
+        elements.startScreen.style.display = 'flex';
+        elements.gameScreen.style.display = 'none';
+        elements.congratsScreen.style.display = 'none';
+        stopFireworks();
+        
+        elements.startScreen.style.display = 'none';
+        elements.gameScreen.style.display = 'block';
+        startNewSentence();
+    }
+
+    function startNewSentence() {
+        state.isTransitioning = false;
+        if (state.completedSentences >= sentences.length) {
+            showCongratulations();
+            return;
+        }
+        const currentData = sentences[state.currentSentenceIndex];
+        state.originalSentence = currentData.en;
+        const cleanSentence = state.originalSentence.replace(/[.!?]$/, '');
+        state.words = cleanSentence.split(' ');
+        state.currentWordIndex = 0;
+        state.mistakeCount = 0;
+
+        elements.meaning.innerHTML = `<span>&ldquo;${currentData.vi}&rdquo;</span><span>${currentData.emoji}</span>`;
+        elements.message.textContent = '';
+        
+        elements.sentence.innerHTML = '';
+        state.words.forEach(() => {
+            const placeholderEl = document.createElement('span');
+            placeholderEl.textContent = '_';
+            placeholderEl.className = 'placeholder-word';
+            elements.sentence.appendChild(placeholderEl);
+        });
+        
+        const shuffledWords = shuffle([...state.words]);
+        elements.wordBank.innerHTML = '';
+        shuffledWords.forEach(word => {
+            const wordEl = document.createElement('div');
+            wordEl.className = 'word';
+            wordEl.textContent = word;
+            wordEl.addEventListener('click', () => handleWordClick(word, wordEl));
+            elements.wordBank.appendChild(wordEl);
+        });
+
+        setInteractive(true);
+        startAudioLoop();
+    }
+
+    function handleWordClick(clickedWord, wordEl) {
+        if (state.isTransitioning || wordEl.classList.contains('temp-disabled') || wordEl.classList.contains('disabled')) return;
+        
+        const correctWord = state.words[state.currentWordIndex];
+        if (clickedWord === correctWord) {
+            wordEl.classList.add('correct', 'disabled');
+            
+            const sentenceSpans = elements.sentence.children;
+            if (sentenceSpans[state.currentWordIndex]) {
+                const targetEl = sentenceSpans[state.currentWordIndex];
+                targetEl.textContent = clickedWord;
+                targetEl.classList.remove('placeholder-word');
+                targetEl.classList.add('filled-word');
+            }
+            
+            state.currentWordIndex++;
+            elements.message.textContent = '';
+
+            if (state.currentWordIndex === state.words.length) {
+                handleSentenceCompletion();
+            }
+        } else {
+            wordEl.classList.add('incorrect');
+            wordEl.classList.add('temp-disabled');
+            state.mistakeCount++;
+            elements.message.textContent = `Sai rồi! (Số lần sai: ${state.mistakeCount})`;
+            
+            setTimeout(() => {
+                wordEl.classList.remove('incorrect');
+                wordEl.classList.remove('temp-disabled');
+            }, 1000);
+        }
+    }
+
+    function handleSentenceCompletion() {
+        state.isTransitioning = true;
+        stopAudioLoop();
+        setInteractive(false);
+
+        if (state.mistakeCount <= 2) {
+            state.score += 10;
+            state.sentencesWithPoints++;
+            elements.message.textContent = 'Chính xác! +10 điểm.';
+            elements.message.style.color = 'var(--success-color)';
+        } else {
+            elements.message.textContent = `Bạn đã sai ${state.mistakeCount} lần, không được cộng điểm câu này.`;
+            elements.message.style.color = 'var(--error-color)';
+        }
+
+        state.completedSentences++;
+        state.currentSentenceIndex++;
+        updateScoreDisplay();
+        
+        state.completionTimeoutId = setTimeout(() => {
+            speakAndHighlight(state.originalSentence, elements.sentence, () => {
+                state.completionTimeoutId = setTimeout(() => {
+                    speakAndHighlight(state.originalSentence, elements.sentence, () => {
+                        state.completionTimeoutId = setTimeout(() => {
+                            elements.message.textContent = '';
+                            elements.message.style.color = 'var(--error-color)';
+                            startNewSentence();
+                        }, 1200);
+                    });
+                }, 400);
+            });
+        }, 800);
+    }
+
+    function showCongratulations() {
+        elements.gameContainer.style.display = 'none';
+        elements.congratsScreen.style.display = 'flex';
+        
+        elements.congratsMessage.innerHTML = `Chúc mừng! Bạn đã hoàn thành tất cả các câu!<br>Đạt điểm: ${state.sentencesWithPoints}/${sentences.length} câu.`;
+        
+        startFireworks();
+    }
+
+    function returnToStartScreen() {
+        stopAudioLoop();
+        if (state.completionTimeoutId) clearTimeout(state.completionTimeoutId);
+        
+        stopFireworks();
+        elements.congratsScreen.style.display = 'none';
+        elements.gameContainer.style.display = 'block';
+        elements.startScreen.style.display = 'flex';
+        elements.gameScreen.style.display = 'none';
+    }
+
+    // --- Speech Synthesis ---
+    function initializeSpeech() {
+        if (isSpeechSupported && speechSynthesis.getVoices().length === 0) {
+            speechSynthesis.onvoiceschanged = () => console.log("Voices loaded.");
+        }
+    }
+
+    function speak(text, rate = 0.9, volume = 1, callback = null) {
+        if (!isSpeechSupported) {
+            if (callback) callback();
+            return;
+        }
+        if (speechSynthesis.speaking) speechSynthesis.cancel();
+        
+        state.isSpeaking = true;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = rate;
+        utterance.volume = volume;
+
+        utterance.onend = () => {
+            state.isSpeaking = false;
+            if (callback) callback();
+        };
+        utterance.onerror = (event) => {
+            if (event.error !== 'interrupted' && event.error !== 'canceled') console.error('SpeechSynthesis Error:', event.error);
+            state.isSpeaking = false;
+            if (callback) callback();
+        };
+        
+        setTimeout(() => speechSynthesis.speak(utterance), 50);
+    }
+
+    function startAudioLoop() {
+        if (state.audioIntervalId) clearInterval(state.audioIntervalId);
+        
+        const playSound = () => {
+            if (!state.isSpeaking && !state.isTransitioning) {
+                speak(state.originalSentence, 0.7, 1);
+            }
+        };
+        
+        playSound();
+        state.audioIntervalId = setInterval(playSound, 5000);
+    }
+
+    function stopAudioLoop() {
+        if (state.audioIntervalId) clearInterval(state.audioIntervalId);
+        state.audioIntervalId = null;
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+    }
+
+    function speakAndHighlight(text, element, onEndCallback) {
+        if (!isSpeechSupported) {
+            if (onEndCallback) onEndCallback();
+            return;
+        }
+        if (speechSynthesis.speaking) speechSynthesis.cancel();
+        
+        const words = text.split(' ');
+        element.innerHTML = words.map(w => `<span class="highlightable-word">${w}</span>`).join(' ');
+        const wordSpans = element.querySelectorAll('.highlightable-word');
+        
+        let wordIndex = 0;
+        
+        state.isSpeaking = true;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.75;
+        utterance.volume = 1;
+
+        utterance.onboundary = (event) => {
+            if (event.name === 'word') {
+                wordSpans.forEach(span => span.classList.remove('highlighted'));
+                if (wordSpans[wordIndex]) {
+                    wordSpans[wordIndex].classList.add('highlighted');
+                    wordIndex++;
+                }
+            }
+        };
+
+        utterance.onend = () => {
+            state.isSpeaking = false;
+            wordSpans.forEach(span => span.classList.remove('highlighted'));
+            element.textContent = text; 
+            if (onEndCallback) onEndCallback();
+        };
+
+        utterance.onerror = (event) => {
+            if (event.error !== 'interrupted' && event.error !== 'canceled') console.error('SpeechSynthesis Error:', event.error);
+            state.isSpeaking = false;
+            element.textContent = text;
+            if (onEndCallback) onEndCallback();
+        };
+
+        setTimeout(() => speechSynthesis.speak(utterance), 50);
+    }
+
+    // --- Utility & Display ---
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function updateScoreDisplay() {
+        elements.score.textContent = `Điểm: ${state.score} | Hoàn thành: ${state.completedSentences}/${sentences.length}`;
+    }
+    
+    function setInteractive(isInteractive) {
+        state.isTransitioning = !isInteractive;
+        elements.listenAgainBtn.disabled = !isInteractive;
+        elements.resetBtn.disabled = !isInteractive;
+        
+        const wordsInBank = elements.wordBank.querySelectorAll('.word');
+        wordsInBank.forEach(word => {
+            if (!word.classList.contains('correct')) {
+                if (isInteractive) {
+                    word.classList.remove('disabled');
+                } else {
+                    word.classList.add('disabled');
+                }
+            }
+        });
+    }
+
+    // --- Fireworks Animation ---
+    const ctx = elements.canvas.getContext('2d');
+    let particles = [];
+    function startFireworks() {
+        elements.canvas.style.display = 'block';
+        particles = [];
+        state.animationFrameId = requestAnimationFrame(animateFireworks);
+        for(let i = 0; i < 5; i++) {
+            setTimeout(() => createExplosion(), Math.random() * 1000);
+        }
+        state.fireworkInterval = setInterval(createExplosion, 500 + Math.random() * 500);
+    }
+    function createExplosion() {
+        const x = Math.random() * elements.canvas.width;
+        const y = Math.random() * elements.canvas.height / 2;
+        for (let i = 0; i < 50; i++) particles.push(createParticle(x, y));
+    }
+    function createParticle(x, y) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 6 + 2;
+        return { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color: `hsl(${Math.random() * 360}, 100%, 70%)`, size: Math.random() * 3 + 1, life: 1, fade: 0.02 };
+    }
+    function animateFireworks() {
+        if(state.animationFrameId === null) return;
+        state.animationFrameId = requestAnimationFrame(animateFireworks);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
+        ctx.globalCompositeOperation = 'lighter';
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life -= p.fade;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${p.color.match(/\d+/)[0]}, 100%, 70%, ${p.life})`;
+            ctx.fill();
+        });
+    }
+    function stopFireworks() {
+        if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+        state.animationFrameId = null;
+        if(state.fireworkInterval) clearInterval(state.fireworkInterval);
+        state.fireworkInterval = null;
+        particles = [];
+        if (ctx) ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+        elements.canvas.style.display = 'none';
+    }
+    
+    // --- Event Listeners ---
+    function setupEventListeners() {
+        elements.startBtn.addEventListener('click', startGame);
+        elements.resetBtn.addEventListener('click', returnToStartScreen);
+        elements.playAgainBtn.addEventListener('click', returnToStartScreen);
+        
+        elements.listenAgainBtn.addEventListener('click', () => {
+            if (!state.isSpeaking && !state.isTransitioning) {
+                speak(state.originalSentence, 0.7, 1);
+            }
+        });
+        window.addEventListener('resize', () => {
+            elements.canvas.width = window.innerWidth;
+            elements.canvas.height = window.innerHeight;
+        });
+    }
+
+    // --- Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+        elements.canvas.width = window.innerWidth;
+        elements.canvas.height = window.innerHeight;
+        elements.canvas.style.display = 'none';
+        initializeState();
+        initializeSpeech();
+        updateScoreDisplay();
+        setupEventListeners();
+    });
+    </script>
+</body>
+</html>
